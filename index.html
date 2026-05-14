@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전기 기구 소켓 시뮬레이터</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    const IconZap = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>;
+    const IconPower = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>;
+    const IconLayers = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>;
+    const IconRadio = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="2"></circle><path d="M4.93 19.07a10 10 0 0 1 0-14.14"></path><path d="M7.76 16.24a6 6 0 0 1 0-8.48"></path><path d="M16.24 7.76a6 6 0 0 1 0 8.48"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>;
+    const IconSettings = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>;
+    const IconWaves = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path></svg>;
+    const IconAlert = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
+
+    const App = () => {
+      const [selectedComp, setSelectedComp] = useState('8-X');
+      const [activeMode, setActiveMode] = useState(null);
+      const containerRef = useRef(null);
+      const [tick, setTick] = useState(0);
+
+      const components = {
+        '8-X': { name: '일반 릴레이 (X)', pins: [6, 5, 4, 3, 7, 8, 1, 2], type: '8-pin', logic: { pwr: { pins: [2, 7] }, com: { pins: [1, 8] }, a: { pairs: [{ p1: 1, p2: 3, color: '#3b82f6' }, { p1: 8, p2: 6, color: '#ef4444' }] }, b: { pairs: [{ p1: 1, p2: 4, color: '#10b981' }, { p1: 8, p2: 5, color: '#f59e0b' }] } } },
+        '8-T': { name: '타이머 (T)', pins: [6, 5, 4, 3, 7, 8, 1, 2], type: '8-pin', logic: { pwr: { pins: [2, 7] }, com: { pins: [1, 8], labels: { 1: '순시', 8: '한시' } }, a: { pairs: [{ p1: 1, p2: 3, color: '#3b82f6', label: '순시' }, { p1: 8, p2: 6, color: '#ef4444', label: '한시', dash: true }] }, b: { pairs: [{ p1: 8, p2: 5, color: '#10b981', label: '한시', dash: true }] } } },
+        '8-FR': { name: '플리커 릴레이 (FR)', pins: [6, 5, 4, 3, 7, 8, 1, 2], type: '8-pin', logic: { pwr: { pins: [2, 7] }, com: { pins: [8] }, a: { pairs: [{ p1: 8, p2: 6, color: '#ef4444' }] }, b: { pairs: [{ p1: 8, p2: 5, color: '#10b981' }] } } },
+        '8-FLS': { name: '플로트리스 스위치 (FLS)', pins: [6, 5, 4, 3, 7, 8, 1, 2], type: '8-pin', logic: { pwr: { pins: [5, 6] }, com: { pins: [4] }, a: { pairs: [{ p1: 4, p2: 3, color: '#ef4444', label: '배수' }] }, b: { pairs: [{ p1: 4, p2: 2, color: '#10b981', label: '급수' }] }, sensor: { pins: [7, 8, 1], labels: { 7: 'E1', 8: 'E2', 1: 'E3' }, special: { 1: 'ground' } } } },
+        '12-EOCR': { name: '과전류계전기 (EOCR)', pins: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], type: '12-pin', logic: { main: { pairs: [{ p1: 1, p2: 7, color: '#fff', thick: true }, { p1: 2, p2: 8, color: '#fff', thick: true }, { p1: 3, p2: 9, color: '#fff', thick: true }] }, pwr: { pins: [6, 12] }, com: { pins: [10], labels: { 10: 'COM' } }, a: { pairs: [{ p1: 11, p2: 5, color: '#ef4444', label: 'A접점' }] }, b: { pairs: [{ p1: 10, p2: 4, color: '#10b981', label: 'B접점' }] } } },
+        '12-MC': { name: '전자접촉기 (MC)', pins: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], type: '12-pin', logic: { main: { pairs: [{ p1: 1, p2: 7, color: '#fff', thick: true }, { p1: 2, p2: 8, color: '#fff', thick: true }, { p1: 3, p2: 9, color: '#fff', thick: true }] }, pwr: { pins: [6, 12] }, com: { message: '공통 단자 없음' }, a: { pairs: [{ p1: 10, p2: 4, color: '#ef4444' }] }, b: { pairs: [{ p1: 11, p2: 5, color: '#10b981' }] } } },
+        '14-X': { name: '다접점 릴레이 (X)', pins: [13, 14, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], type: '14-pin', logic: { pwr: { pins: [13, 14] }, com: { pins: [9, 10, 11, 12] }, a: { pairs: [{ p1: 9, p2: 5, color: '#ef4444' }, { p1: 10, p2: 6, color: '#3b82f6' }, { p1: 11, p2: 7, color: '#f59e0b' }, { p1: 12, p2: 8, color: '#8b5cf6' }] }, b: { pairs: [{ p1: 9, p2: 1, color: '#10b981' }, { p1: 10, p2: 2, color: '#ec4899' }, { p1: 11, p2: 3, color: '#06b6d4' }, { p1: 12, p2: 4, color: '#71717a' }] } } }
+      };
+
+      const currentData = components[selectedComp];
+
+      useEffect(() => {
+        const handleResize = () => setTick(t => t + 1);
+        window.addEventListener('resize', handleResize);
+        const timer = setTimeout(() => setTick(t => t + 1), 150);
+        return () => { window.removeEventListener('resize', handleResize); clearTimeout(timer); };
+      }, [selectedComp, activeMode]);
+
+      const handleModeChange = (mode) => setActiveMode(activeMode === mode ? null : mode);
+
+      const getPinCoords = (pinNum) => {
+        const el = document.getElementById(`pin-${pinNum}`);
+        if (!el || !containerRef.current) return null;
+        const rect = el.getBoundingClientRect();
+        const contRect = containerRef.current.getBoundingClientRect();
+        return { x: rect.left - contRect.left + rect.width / 2, y: rect.top - contRect.top + rect.height / 2 };
+      };
+
+      const renderConnections = () => {
+        if (!activeMode || !currentData.logic[activeMode]?.pairs) return null;
+        return currentData.logic[activeMode].pairs.map((pair, idx) => {
+          const p1Pos = getPinCoords(pair.p1);
+          const p2Pos = getPinCoords(pair.p2);
+          if (!p1Pos || !p2Pos) return null;
+          return (
+            <g key={`pair-${idx}`}>
+              <line x1={p1Pos.x} y1={p1Pos.y} x2={p2Pos.x} y2={p2Pos.y} stroke={pair.color} strokeWidth={pair.thick ? 6 : 3} strokeDasharray={pair.dash ? '6,4' : 'none'} className="transition-all duration-300" />
+              {pair.label && <text x={(p1Pos.x + p2Pos.x) / 2} y={(p1Pos.y + p2Pos.y) / 2 - 8} fill={pair.color} fontSize="11" textAnchor="middle" className="font-bold">{pair.label}</text>}
+            </g>
+          );
+        });
+      };
+
+      const renderSpecialEffects = () => {
+        if (activeMode === 'sensor' && currentData.logic.sensor?.special) {
+          return Object.entries(currentData.logic.sensor.special).map(([pin, type]) => {
+            if (type === 'ground') {
+              const pos = getPinCoords(pin);
+              if (!pos) return null;
+              return (
+                <g key={`special-${pin}`} transform={`translate(${pos.x}, ${pos.y + 30})`}>
+                  <line x1="-12" y1="0" x2="12" y2="0" stroke="#10b981" strokeWidth="2" />
+                  <line x1="-8" y1="4" x2="8" y2="4" stroke="#10b981" strokeWidth="2" />
+                  <line x1="-4" y1="8" x2="4" y2="8" stroke="#10b981" strokeWidth="2" />
+                  <line x1="0" y1="-30" x2="0" y2="0" stroke="#10b981" strokeWidth="2" strokeDasharray="3,2" />
+                  <text x="16" y="8" fill="#10b981" fontSize="9">GND</text>
+                </g>
+              );
+            }
+            return null;
+          });
+        }
+        return null;
+      };
+
+      return (
+        <div className="flex flex-col min-h-screen w-full bg-slate-950 text-slate-100 p-4 md:p-6 font-sans">
+          <div className="bg-slate-900 border-2 border-slate-700 rounded-lg p-2 md:p-3 text-center mb-4 md:mb-6 overflow-x-auto whitespace-nowrap">
+            <span className="text-sm md:text-xl font-mono tracking-widest text-emerald-400">[SS]PB0,C,PB1,A,C,M ▤▤ [TB1]L1,L2 ■ L3,PE ▤▤▤▤▤ RL,C,GL</span>
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-4 md:gap-6 flex-1">
+            <div className="w-full lg:w-80 bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-6 flex flex-col gap-4 md:gap-6 shrink-0">
+              <div>
+                <label className="block text-slate-400 text-xs md:text-sm font-semibold mb-2">기구 종류 선택 메뉴</label>
+                <select className="w-full bg-slate-800 border border-slate-700 text-white p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer appearance-none text-sm md:text-base" value={selectedComp} onChange={(e) => { setSelectedComp(e.target.value); setActiveMode(null); }}>
+                  <optgroup label="8핀 사각형 소켓 기구"><option value="8-X">일반 릴레이 (X)</option><option value="8-T">타이머 (T)</option><option value="8-FR">플리커 릴레이 (FR)</option><option value="8-FLS">플로트리스 스위치 (FLS)</option></optgroup>
+                  <optgroup label="12핀 사각형 소켓 기구"><option value="12-EOCR">과전류계전기 (EOCR)</option><option value="12-MC">전자접촉기 (MC)</option></optgroup>
+                  <optgroup label="14핀 사각형 소켓 기구"><option value="14-X">다접점 릴레이 (X)</option></optgroup>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-2 md:gap-3">
+                <label className="text-slate-400 text-xs md:text-sm font-semibold">동작 테스트</label>
+                {currentData.logic.main && <button onClick={() => handleModeChange('main')} className={`flex items-center gap-3 p-3 md:p-4 rounded-xl font-bold transition-all text-sm md:text-base ${activeMode === 'main' ? 'bg-white text-slate-950 scale-105' : 'bg-slate-800 text-slate-300'}`}><IconZap /> [주회로]</button>}
+                <button onClick={() => handleModeChange('pwr')} className={`flex items-center gap-3 p-3 md:p-4 rounded-xl font-bold transition-all text-sm md:text-base ${activeMode === 'pwr' ? 'bg-yellow-400 text-slate-950 scale-105' : 'bg-slate-800 text-slate-300'}`}><IconPower /> [전원]</button>
+                <button onClick={() => handleModeChange('com')} className={`flex items-center gap-3 p-3 md:p-4 rounded-xl font-bold transition-all text-sm md:text-base ${activeMode === 'com' ? 'bg-blue-500 text-white scale-105' : 'bg-slate-800 text-slate-300'}`}><IconLayers /> [공통(COM)]</button>
+                <button onClick={() => handleModeChange('a')} className={`flex items-center gap-3 p-3 md:p-4 rounded-xl font-bold transition-all text-sm md:text-base ${activeMode === 'a' ? 'bg-red-500 text-white scale-105' : 'bg-slate-800 text-slate-300'}`}><IconRadio /> [A접점]</button>
+                <button onClick={() => handleModeChange('b')} className={`flex items-center gap-3 p-3 md:p-4 rounded-xl font-bold transition-all text-sm md:text-base ${activeMode === 'b' ? 'bg-emerald-500 text-slate-950 scale-105' : 'bg-slate-800 text-slate-300'}`}><IconSettings /> [B접점]</button>
+                {currentData.logic.sensor && <button onClick={() => handleModeChange('sensor')} className={`flex items-center gap-3 p-3 md:p-4 rounded-xl font-bold transition-all text-sm md:text-base ${activeMode === 'sensor' ? 'bg-purple-500 text-white scale-105' : 'bg-slate-800 text-slate-300'}`}><IconWaves /> [센서 (전극봉)]</button>}
+              </div>
+            </div>
+
+            <div className="flex-1 bg-slate-900 border border-slate-800 rounded-3xl p-4 md:p-8 relative flex flex-col items-center justify-center overflow-x-auto min-h-[400px]">
+              <div className="absolute top-4 left-4 md:top-8 md:left-8 flex flex-col z-20">
+                <h2 className="text-xl md:text-3xl font-black text-white mb-1 uppercase">{currentData.name}</h2>
+                <p className="text-xs md:text-sm text-slate-500 font-medium">부품 사양: {currentData.type} 사각형</p>
+              </div>
+
+              {currentData.logic[activeMode]?.message && (
+                <div className="absolute top-4 right-4 md:top-8 md:right-8 bg-red-900/50 border border-red-500 text-red-300 px-3 py-1.5 md:px-4 md:py-2 rounded-lg flex items-center gap-2 text-xs md:text-base z-20">
+                  <IconAlert /> <span className="font-bold">{currentData.logic[activeMode].message}</span>
+                </div>
+              )}
+
+              <div className="relative p-6 md:p-12 mt-16 md:mt-0" ref={containerRef}>
+                <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+                  {renderConnections()}
+                  {renderSpecialEffects()}
+                </svg>
+
+                <div className={`grid gap-x-4 gap-y-8 sm:gap-x-8 sm:gap-y-12 md:gap-x-12 md:gap-y-16 relative z-10 ${currentData.type === '8-pin' ? 'grid-cols-4' : currentData.type === '12-pin' ? 'grid-cols-6' : 'grid-cols-4'}`}>
+                  {currentData.type === '14-pin' ? (
+                    <>
+                      {[13, 0, 0, 14].map((n, i) => <Pin key={`r1-${i}`} num={n} activeMode={activeMode} logic={currentData.logic} />)}
+                      {[1, 2, 3, 4].map((n) => <Pin key={`r2-${n}`} num={n} activeMode={activeMode} logic={currentData.logic} />)}
+                      {[5, 6, 7, 8].map((n) => <Pin key={`r3-${n}`} num={n} activeMode={activeMode} logic={currentData.logic} />)}
+                      {[9, 10, 11, 12].map((n) => <Pin key={`r4-${n}`} num={n} activeMode={activeMode} logic={currentData.logic} />)}
+                    </>
+                  ) : currentData.type === '8-pin' ? (
+                    [6, 5, 4, 3, 7, 8, 1, 2].map((n, i) => <Pin key={`pin8-${i}`} num={n} activeMode={activeMode} logic={currentData.logic} />)
+                  ) : (
+                    currentData.pins.map((pinNum, idx) => <Pin key={`pin-${idx}`} num={pinNum} activeMode={activeMode} logic={currentData.logic} />)
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900 border-2 border-slate-700 rounded-lg p-2 md:p-3 text-center mt-4 md:mt-6 overflow-x-auto whitespace-nowrap">
+            <span className="text-sm md:text-xl font-mono tracking-widest text-emerald-400">YL,C,BZ ▤▤ [TB3]U2,V2,W2,PE,X ▤ [TB4]X,E1,E2,E3 ▤▤ [TB2]U1,V1,W1,PE</span>
+          </div>
+        </div>
+      );
+    };
+
+    const Pin = ({ num, activeMode, logic }) => {
+      if (num === 0) return <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 invisible" />;
+
+      const isHighlighted = useMemo(() => {
+        if (!activeMode || !logic[activeMode]) return false;
+        const modeLogic = logic[activeMode];
+        if (modeLogic.pins?.includes(num)) return true;
+        if (modeLogic.pairs?.some(p => p.p1 === num || p.p2 === num)) return true;
+        return false;
+      }, [num, activeMode, logic]);
+
+      const highlightColor = useMemo(() => {
+        if (!isHighlighted) return null;
+        if (activeMode === 'pwr') return 'bg-yellow-400 text-slate-950 border-yellow-200';
+        if (activeMode === 'com') return 'bg-blue-500 text-white border-blue-300';
+        if (activeMode === 'a') return 'bg-red-500 text-white border-red-300';
+        if (activeMode === 'b') return 'bg-emerald-500 text-slate-950 border-emerald-300';
+        if (activeMode === 'main') return 'bg-white text-slate-950 border-slate-100';
+        if (activeMode === 'sensor') return 'bg-purple-500 text-white border-purple-300';
+        return null;
+      }, [isHighlighted, activeMode]);
+
+      const label = logic[activeMode]?.labels?.[num];
+
+      return (
+        <div id={`pin-${num}`} className={`w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex flex-col items-center justify-center border-2 md:border-4 transition-all relative ${isHighlighted ? `${highlightColor} scale-110 z-20` : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
+          <span className="text-xl sm:text-2xl md:text-3xl font-black">{num}</span>
+          {label && <span className="absolute -top-6 md:-top-8 left-1/2 -translate-x-1/2 bg-slate-100 text-slate-900 px-1.5 md:px-2 py-0.5 rounded text-[9px] md:text-xs font-bold whitespace-nowrap">{label}</span>}
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
